@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import CircularGallery from './CircularGallery';
 
 const products = [
     {
@@ -32,31 +33,35 @@ const products = [
 ];
 
 const ProductShowcase = () => {
-    const revealRefs = useRef([]);
+    const revealRef = useRef(null);
 
     useEffect(() => {
         const observer = new IntersectionObserver(
-            (entries) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('active');
-                    }
-                });
+            ([entry]) => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                }
             },
             { threshold: 0.1 }
         );
 
-        revealRefs.current.forEach((ref) => {
-            if (ref) observer.observe(ref);
-        });
-
+        if (revealRef.current) observer.observe(revealRef.current);
         return () => observer.disconnect();
     }, []);
 
+    const galleryItems = products.map(p => ({
+        image: p.image,
+        text: p.name.toUpperCase()
+    }));
+
     return (
-        <section id="flavors" className="products" style={{ background: '#fff', padding: '160px 0' }}>
+        <section id="flavors" className="products" style={{
+            background: '#fff',
+            padding: '160px 0',
+            overflow: 'hidden'
+        }}>
             <div className="container">
-                <div style={{ textAlign: 'center', marginBottom: '100px' }} className="reveal-on-scroll" ref={el => revealRefs.current[0] = el}>
+                <div style={{ textAlign: 'center', marginBottom: '60px' }} className="reveal-on-scroll" ref={revealRef}>
                     <p style={{
                         color: 'var(--brand-orange)',
                         letterSpacing: '0.4rem',
@@ -78,87 +83,26 @@ const ProductShowcase = () => {
                     </h2>
                     <div style={{ width: '60px', height: '2px', background: 'var(--brand-amber)', margin: '0 auto 2rem' }} />
                     <p style={{ maxWidth: '600px', margin: '0 auto', fontSize: '1.1rem', color: 'var(--text-muted)', lineHeight: 1.8 }}>
-                        Each kettle-cooked batch is a curated journey of complex layers,
-                        where premium ingredients meet artisanal craftsmanship.
+                        Experience our artisanal collection through an interactive sensory lens.
+                        Drag or scroll to explore the craftsmanship behind every crunch.
                     </p>
                 </div>
 
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
-                    gap: '4rem 2rem',
-                    marginBottom: '100px'
-                }}>
-                    {products.map((product, index) => (
-                        <div
-                            key={product.id}
-                            className="product-card reveal-on-scroll"
-                            ref={el => revealRefs.current[index + 1] = el}
-                            style={{ transitionDelay: `${index * 0.15}s` }}
-                        >
-                            <div className="product-image-container" style={{ marginBottom: '2.5rem' }}>
-                                <img
-                                    src={product.image}
-                                    alt={product.name}
-                                />
-                            </div>
-                            <div style={{ padding: '0 10px' }}>
-                                <h3 style={{
-                                    marginBottom: '1rem',
-                                    fontSize: '1.8rem',
-                                    fontFamily: 'var(--font-heading)',
-                                    fontWeight: 700
-                                }}>
-                                    {product.name}
-                                </h3>
-                                <p style={{
-                                    fontSize: '0.9rem',
-                                    color: 'var(--brand-orange)',
-                                    fontWeight: 700,
-                                    letterSpacing: '0.05rem',
-                                    marginBottom: '1.2rem',
-                                    fontStyle: 'italic'
-                                }}>
-                                    {product.tastingNote}
-                                </p>
-                                <p style={{
-                                    fontSize: '1rem',
-                                    color: 'var(--text-muted)',
-                                    lineHeight: 1.7,
-                                    marginBottom: '2.5rem'
-                                }}>
-                                    {product.description}
-                                </p>
-                                <button style={{
-                                    color: 'var(--brand-red)',
-                                    fontWeight: '900',
-                                    background: 'transparent',
-                                    paddingBottom: '0.5rem',
-                                    border: 'none',
-                                    borderBottom: '1.5px solid var(--brand-amber)',
-                                    fontSize: '0.75rem',
-                                    letterSpacing: '0.15rem',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.3s ease'
-                                }}
-                                    onMouseEnter={(e) => {
-                                        e.currentTarget.style.borderBottomColor = 'var(--brand-red)';
-                                        e.currentTarget.style.letterSpacing = '0.2rem';
-                                    }}
-                                    onMouseLeave={(e) => {
-                                        e.currentTarget.style.borderBottomColor = 'var(--brand-amber)';
-                                        e.currentTarget.style.letterSpacing = '0.15rem';
-                                    }}>
-                                    VIEW PROFILE
-                                </button>
-                            </div>
-                        </div>
-                    ))}
+                <div style={{ height: '700px', position: 'relative', width: '100%', cursor: 'grab' }}>
+                    <CircularGallery
+                        items={galleryItems}
+                        bend={1.5}
+                        textColor="var(--brand-orange)"
+                        borderRadius={0.02}
+                        scrollSpeed={3}
+                        scrollEase={0.04}
+                        font="bold 40px 'Playfair Display', serif"
+                    />
                 </div>
 
-                <div style={{ textAlign: 'center' }} className="reveal-on-scroll" ref={el => revealRefs.current[5] = el}>
+                <div style={{ textAlign: 'center', marginTop: '60px' }}>
                     <button className="explore-all-button">
-                        Explore the Collection
+                        Explore the full range
                     </button>
                 </div>
             </div>

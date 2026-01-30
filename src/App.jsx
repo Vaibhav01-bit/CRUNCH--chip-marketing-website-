@@ -6,10 +6,12 @@ import Craftsmanship from './components/Craftsmanship.jsx'
 import FlavorExperience from './components/FlavorExperience.jsx'
 import Retailers from './components/Retailers.jsx'
 import { Newsletter, Footer } from './components/FooterSections.jsx'
+import SplashCursor from './components/SplashCursor.jsx'
 
 function App() {
   return (
     <div className="app">
+      <SplashCursor />
       <nav style={{
         position: 'fixed', top: 0, width: '100%', zIndex: 1000,
         padding: '2rem 3rem', display: 'flex', justifyContent: 'space-between',
