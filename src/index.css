@@ -1,24 +1,35 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
 
 :root {
-  /* Brand Palette */
-  --brand-orange: #F18701;
-  /* Tiger Orange - Primary */
-  --brand-red: #F35B04;
-  /* Cayenne Red - CTA/Emphasis */
-  --brand-amber: #F7B801;
-  /* Amber Flame - Highlights/Hover */
-  --brand-green: #ABE188;
-  /* Light Green - Freshness/Natural */
+  /* Brand Palette - Crispy & Bold */
+  --brand-yellow: #FCD34D;
+  /* Golden Crunch - Hero */
+  --brand-orange: #F59E0B;
+  /* Baked Gold */
+  --brand-red: #DC2626;
+  /* Spicy Chili - Primary CTA */
+  --brand-green: #65A30D;
+  /* Fresh Herb - Secondary Accent */
+  --brand-cream: #FFFBEB;
+  /* Buttermilk Cream - Background */
 
   /* UI Colors */
-  --primary-dark: #0A0A0A;
-  --bg-light: #FFFFFF;
-  --text-dark: #1A1A1A;
-  --text-muted: #666666;
+  --primary-dark: #451A03;
+  /* Deep Roast - Headings */
+  --primary-text: #78350F;
+  /* Spiced Earth - Body Text */
+  --bg-surface: #FFFBEB;
+  /* Main Background */
+  --bg-card: #FFFFFF;
+  /* Crisp White Cards */
+
+  --text-dark: #451A03;
+  --text-muted: #92400E;
+  /* Lighter brown/orange for muted text */
 
   /* Typography */
-  --font-heading: 'Playfair Display', serif;
+  --font-heading: 'Inter', sans-serif;
+  /* Switching to chunky Sans */
   --font-body: 'Inter', sans-serif;
 
   --header-height: 80px;
@@ -55,11 +66,28 @@ a {
   transition: 0.3s ease;
 }
 
-button {
+button,
+.nav-link,
+.cta-button {
   cursor: pointer;
   border: none;
   outline: none;
-  transition: 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  min-height: 48px;
+  /* Mobile Friendly Touch Target */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+button:active {
+  transform: scale(0.95);
+  /* The Squish */
+}
+
+button:hover {
+  transform: translateY(-3px) rotate(-1deg);
+  /* The Playful Lift */
 }
 
 .container {

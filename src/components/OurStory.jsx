@@ -114,32 +114,32 @@ const PotatoField = () => {
 
 const PotatoBackground3D = () => {
     return (
-        <div style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none', background: '#fdfbf7' }}>
+        <div style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none', background: 'var(--brand-cream)' }}>
             <Canvas gl={{ alpha: true, antialias: true }}>
                 <PerspectiveCamera makeDefault position={[0, 0, 20]} />
 
-                {/* Cinematic Lighting */}
-                <ambientLight intensity={0.4} />
-                <pointLight position={[10, 10, 10]} intensity={1.5} color="#f35b04" />
-                <pointLight position={[-10, 5, 10]} intensity={0.8} color="#fff" />
-                <spotLight position={[0, 20, 0]} intensity={0.5} angle={Math.PI / 4} penumbra={1} castShadow />
+                {/* Bright Studio Lighting */}
+                <ambientLight intensity={0.8} />
+                <pointLight position={[10, 10, 10]} intensity={1.5} color="#FCD34D" />
+                <pointLight position={[-10, 5, 10]} intensity={1.0} color="#fff" />
+                <spotLight position={[0, 20, 0]} intensity={0.8} angle={Math.PI / 4} penumbra={1} castShadow />
 
                 <Suspense fallback={null}>
                     <PotatoField />
                 </Suspense>
             </Canvas>
 
-            {/* Cinematic Overlays */}
+            {/* Bright Gradient Overlays */}
             <div style={{
                 position: 'absolute',
                 inset: 0,
-                background: 'radial-gradient(circle at center, transparent 30%, rgba(253, 251, 247, 0.5) 100%)',
+                background: 'radial-gradient(circle at center, transparent 30%, rgba(255, 251, 235, 0.4) 100%)',
                 pointerEvents: 'none'
             }} />
             <div style={{
                 position: 'absolute',
                 inset: 0,
-                background: 'linear-gradient(to bottom, #fff 0%, transparent 10%, transparent 90%, #fff 100%)',
+                background: 'linear-gradient(to bottom, var(--brand-cream) 0%, transparent 10%, transparent 90%, var(--brand-cream) 100%)',
                 pointerEvents: 'none'
             }} />
         </div>
@@ -210,7 +210,7 @@ const OurStory = () => {
 
     return (
         <section id="story" className="our-story" style={{
-            background: '#fff',
+            background: 'var(--brand-cream)',
             padding: '160px 0',
             overflow: 'hidden',
             position: 'relative'
@@ -265,69 +265,67 @@ const OurStory = () => {
                                 zIndex: 3
                             }} />
 
-                            {/* Glass Badge */}
+                            {/* Sticker Badge */}
                             <div style={{
                                 position: 'absolute',
                                 bottom: '2rem',
                                 left: '2rem',
-                                background: 'rgba(255, 255, 255, 0.8)',
-                                backdropFilter: 'blur(8px)',
+                                background: '#FFFFFF',
                                 padding: '1rem 1.5rem',
-                                borderRadius: '4px',
+                                borderRadius: '100px',
                                 zIndex: 4,
-                                boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                                boxShadow: '0 8px 20px rgba(0,0,0,0.1)',
+                                border: '3px solid var(--brand-red)',
+                                transform: 'rotate(-5deg)'
                             }}>
-                                <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: 800, letterSpacing: '0.1rem', color: 'var(--primary-dark)' }}>EST. 2024</p>
+                                <p style={{ margin: 0, fontSize: '0.8rem', fontWeight: 900, letterSpacing: '0.05rem', color: 'var(--brand-red)' }}>EST. 2024</p>
                             </div>
                         </div>
                     </TiltPanel>
                 </div>
 
-                {/* Right: Editorial Typography in Glass Card */}
+                {/* Right: Modern Card */}
                 <div className="reveal-on-scroll"
                     ref={el => revealRefs.current[1] = el}
                     style={{
                         textAlign: 'left',
                         transitionDelay: '0.2s',
-                        background: 'rgba(255, 255, 255, 0.6)',
-                        backdropFilter: 'blur(12px)',
+                        background: '#FFFFFF',
                         padding: '3.5rem',
-                        borderRadius: '24px',
-                        border: '1px solid rgba(255, 255, 255, 0.8)',
-                        boxShadow: '0 20px 50px rgba(0, 0, 0, 0.05)'
+                        borderRadius: '32px',
+                        boxShadow: '0 20px 40px rgba(69, 26, 3, 0.08)'
                     }}
                 >
                     <div style={{
                         display: 'inline-block',
                         padding: '0.6rem 1.4rem',
-                        border: '1px solid var(--brand-amber)',
-                        color: 'var(--brand-orange)',
-                        fontSize: '0.75rem',
-                        letterSpacing: '0.2rem',
+                        background: 'var(--brand-yellow)',
+                        color: 'var(--primary-dark)',
+                        fontSize: '0.8rem',
+                        letterSpacing: '0.1rem',
                         fontWeight: '900',
                         textTransform: 'uppercase',
                         marginBottom: '2.5rem',
-                        background: 'rgba(255, 255, 255, 0.5)',
                         borderRadius: '100px'
                     }}>
                         Born In Volcanic Soil
                     </div>
 
                     <h2 style={{
-                        fontSize: 'clamp(2.5rem, 5vw, 3.8rem)',
+                        fontSize: 'clamp(2.5rem, 5vw, 4rem)',
                         fontFamily: 'var(--font-heading)',
-                        fontWeight: 800,
-                        lineHeight: 1.1,
+                        fontWeight: 900,
+                        lineHeight: 1.05,
                         marginBottom: '2.5rem',
                         color: 'var(--primary-dark)',
-                        letterSpacing: '-0.02em'
+                        letterSpacing: '-0.03em'
                     }}>
                         Crafted by <br />
                         Obsession, <br />
-                        Defined by <span style={{ color: 'var(--brand-orange)' }}>crunch</span>.
+                        Defined by <span style={{ color: 'var(--brand-red)' }}>crunch</span>.
                     </h2>
 
-                    <div style={{ width: '80px', height: '3px', background: 'var(--brand-orange)', marginBottom: '2.5rem' }} />
+                    <div style={{ width: '80px', height: '6px', background: 'var(--brand-yellow)', marginBottom: '2.5rem', borderRadius: '10px' }} />
 
                     <p style={{
                         fontSize: '1.15rem',

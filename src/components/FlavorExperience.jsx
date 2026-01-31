@@ -1,107 +1,200 @@
-import React, { Suspense, useRef, useMemo, useEffect } from 'react';
-import { Canvas, useFrame, useLoader } from '@react-three/fiber';
-import { Float, PerspectiveCamera, Points, PointMaterial, useTexture } from '@react-three/drei';
+import React, { Suspense, useRef, useMemo, useEffect, useState } from 'react';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { Float, PerspectiveCamera, useTexture, ContactShadows, Environment, Instance, Instances } from '@react-three/drei';
 import * as THREE from 'three';
 
-const FloatingChips = () => {
-    const chipTexture = useTexture('/assets/chip-single.png');
-    const chipsCount = 5;
+const Potato = ({ visible, position }) => {
+    const mesh = useRef();
 
-    const chips = useMemo(() => {
-        return Array.from({ length: chipsCount }).map((_, i) => ({
-            position: [(Math.random() - 0.5) * 4, (Math.random() - 0.5) * 4, Math.random() * 2],
-            rotation: [Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI],
-            scale: 0.8 + Math.random() * 0.5,
-            speed: 0.2 + Math.random() * 0.3
+    useFrame((state) => {
+        if (!mesh.current || !visible) return;
+        const t = state.clock.getElapsedTime();
+        mesh.current.rotation.z = Math.sin(t * 1) * 0.05;
+        mesh.current.position.y = position[1] + Math.sin(t * 1.5) * 0.05;
+    });
+
+    return (
+        <mesh
+            ref={mesh}
+            position={position}
+            visible={visible}
+            scale={[1.1, 1.5, 1.1]}
+        >
+            <sphereGeometry args={[1.5, 32, 32]} />
+            <meshStandardMaterial
+                color="#8B4513"
+                roughness={0.8}
+                metalness={0.1}
+                bumpScale={0.15}
+            />
+        </mesh>
+    );
+};
+
+const SlicedChips = ({ visible, texture }) => {
+    const group = useRef();
+    const [exploded, setExploded] = useState(false);
+
+    useEffect(() => {
+        if (visible) {
+            // Instant explosion state
+            setExploded(true);
+        } else {
+            setExploded(false);
+        }
+    }, [visible]);
+
+    useFrame((state) => {
+        if (!group.current || !visible) return;
+        // Slow rotation of the entire fanned group
+        group.current.rotation.y += 0.002;
+    });
+
+    const chipsData = useMemo(() => {
+        return Array.from({ length: 12 }).map((_, i) => ({
+            idx: i,
+            // Fan out positions
+            targetPos: [
+                (Math.random() - 0.5) * 5,
+                (i - 6) * 0.6,
+                (Math.random() - 0.5) * 2
+            ],
+            targetRot: [
+                Math.random() * 0.5,
+                Math.random() * Math.PI,
+                Math.random() * 0.5
+            ],
+            // Start tightly packed
+            startPos: [0, (i - 6) * 0.1, 0]
         }));
     }, []);
 
     return (
-        <group>
-            {chips.map((data, i) => (
-                <Float
+        <group ref={group}>
+            {chipsData.map((data, i) => (
+                <ChipInstance
                     key={i}
-                    speed={data.speed * 4}
-                    rotationIntensity={1.5}
-                    floatIntensity={2}
-                >
-                    <mesh position={data.position} rotation={data.rotation} scale={data.scale}>
-                        <planeGeometry args={[1.5, 1.5]} />
-                        <meshStandardMaterial
-                            map={chipTexture}
-                            transparent
-                            alphaTest={0.5}
-                            side={THREE.DoubleSide}
-                            roughness={0.4}
-                            metalness={0.1}
-                        />
-                    </mesh>
-                </Float>
+                    data={data}
+                    exploded={exploded}
+                    texture={texture}
+                />
             ))}
         </group>
     );
 };
 
-const SaltParticles = () => {
-    const count = 2000;
-    const positions = useMemo(() => {
-        const pos = new Float32Array(count * 3);
-        for (let i = 0; i < count; i++) {
-            pos[i * 3] = (Math.random() - 0.5) * 10;
-            pos[i * 3 + 1] = (Math.random() - 0.5) * 10;
-            pos[i * 3 + 2] = (Math.random() - 0.5) * 10;
-        }
-        return pos;
-    }, []);
-
-    const pointsRef = useRef();
+const ChipInstance = ({ data, exploded, texture }) => {
+    const mesh = useRef();
 
     useFrame((state) => {
-        const time = state.clock.getElapsedTime();
-        if (pointsRef.current) {
-            pointsRef.current.rotation.y = time * 0.05;
-            pointsRef.current.rotation.x = time * 0.02;
-        }
+        if (!mesh.current) return;
+
+        const targetP = exploded ? data.targetPos : data.startPos;
+        const targetR = exploded ? data.targetRot : [0, 0, 0];
+
+        // "Snappy" LERP: Faster shift for that sharp cutting feel
+        const speed = exploded ? 0.15 : 1;
+
+        mesh.current.position.lerp(new THREE.Vector3(...targetP), speed);
+
+        mesh.current.rotation.x = THREE.MathUtils.lerp(mesh.current.rotation.x, targetR[0], speed * 0.5);
+        mesh.current.rotation.y = THREE.MathUtils.lerp(mesh.current.rotation.y, targetR[1], speed * 0.5);
+        mesh.current.rotation.z = THREE.MathUtils.lerp(mesh.current.rotation.z, targetR[2], speed * 0.5);
     });
 
     return (
-        <Points ref={pointsRef} positions={positions} stride={3}>
-            <PointMaterial
-                transparent
-                color="#ffffff"
-                size={0.015}
-                sizeAttenuation={true}
-                depthWrite={false}
-                opacity={0.4}
+        <mesh ref={mesh} position={data.startPos}>
+            {/* Thinner chips for sharpness */}
+            <cylinderGeometry args={[1.2, 1.2, 0.05, 32]} />
+            <meshStandardMaterial
+                map={texture}
+                roughness={0.3}
+                metalness={0.1}
+                color="#FCD34D"
             />
-        </Points>
+        </mesh>
     );
 };
 
-const Scene3D = () => {
+const SliceEffect = ({ active }) => {
+    const ref = useRef();
+
+    // Reset position when activated
+    useEffect(() => {
+        if (active && ref.current) {
+            ref.current.position.set(5, 5, 2);
+            ref.current.scale.set(1, 1, 1);
+            ref.current.material.opacity = 0.9;
+        }
+    }, [active]);
+
+    useFrame(() => {
+        if (ref.current && active) {
+            // Fast slash motion across screen
+            ref.current.position.x -= 0.8;
+            ref.current.position.y -= 0.8;
+            // Stretch along motion path
+            ref.current.scale.x += 0.2;
+            ref.current.material.opacity -= 0.04;
+        }
+    });
+
+    if (!active) return null;
+
+    return (
+        <mesh ref={ref} rotation={[0, 0, Math.PI / 4]}>
+            <planeGeometry args={[6, 0.05]} />
+            <meshBasicMaterial
+                color="#FFF"
+                transparent
+                opacity={0}
+                side={THREE.DoubleSide}
+                toneMapped={false} // Make it super bright
+            />
+        </mesh>
+    );
+};
+
+const PotatoSlicerScene = () => {
+    const chipTexture = useTexture('/assets/chip-single.png');
+
+    const [state, setState] = useState('potato'); // potato | slicing | chips
+
+    useEffect(() => {
+        const loop = setInterval(() => {
+            // Cycle: Potato (2s) -> Slice (0.2s) -> Chips (2.8s)
+            setState('potato');
+            setTimeout(() => setState('slicing'), 1500);
+            setTimeout(() => setState('chips'), 1600);
+        }, 5000);
+
+        return () => clearInterval(loop);
+    }, []);
+
     return (
         <>
-            <PerspectiveCamera makeDefault position={[0, 0, 5]} />
-            <ambientLight intensity={0.5} />
-            <directionalLight position={[5, 5, 5]} intensity={2} color="#f18701" />
-            <directionalLight position={[-5, -5, 5]} intensity={1} color="#f35b04" />
+            <PerspectiveCamera makeDefault position={[0, 0, 9]} fov={40} />
 
-            <Suspense fallback={null}>
-                <FloatingChips />
-                <SaltParticles />
-            </Suspense>
+            <ambientLight intensity={0.7} />
+            <spotLight position={[10, 10, 5]} intensity={2} castShadow />
+            <spotLight position={[-5, 0, 5]} intensity={1.5} color="#FFD700" />
+            <Environment preset="studio" />
 
-            {/* Soft heat wave effect - subtle light distortion */}
-            <mesh position={[0, 0, -2]}>
-                <planeGeometry args={[20, 20]} />
-                <meshStandardMaterial
-                    color="#000000"
-                    emissive="#f18701"
-                    emissiveIntensity={0.02}
-                    transparent
-                    opacity={1}
+            <group position={[0, 0, 0]}>
+                <Potato
+                    visible={state === 'potato' || state === 'slicing'}
+                    position={[0, 0, 0]}
                 />
-            </mesh>
+
+                <SlicedChips
+                    visible={state === 'chips'}
+                    texture={chipTexture}
+                />
+
+                <SliceEffect active={state === 'slicing'} />
+            </group>
+
+            <ContactShadows opacity={0.3} scale={10} blur={2.5} far={4} color="#000" />
         </>
     );
 };
@@ -125,76 +218,111 @@ const FlavorExperience = () => {
 
     return (
         <section className="flavor-experience" style={{
-            background: '#000',
-            color: 'white',
-            padding: '180px 0',
+            background: 'var(--brand-cream)',
+            color: '#451A03', // Deep Brown Text
+            padding: '160px 0',
             overflow: 'hidden',
             position: 'relative'
         }}>
+            {/* Background Texture/Pattern could go here */}
+
             <div className="container" style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
-                gap: '10rem',
+                gap: '6rem',
                 alignItems: 'center',
                 position: 'relative',
-                zIndex: 2
+                zIndex: 2,
+                maxWidth: '1300px',
+                margin: '0 auto',
+                padding: '0 2rem'
             }}>
-                <div className="flavor-content reveal-on-scroll" ref={revealRef}>
+                {/* Text Content */}
+                <div className="flavor-content reveal-on-scroll" ref={revealRef} style={{ paddingRight: '2rem' }}>
                     <p style={{
-                        color: 'var(--brand-orange)',
-                        marginBottom: '2rem',
-                        letterSpacing: '0.5rem',
-                        fontSize: '0.8rem',
+                        color: '#DC2626', // Brand Red
+                        marginBottom: '1.5rem',
+                        letterSpacing: '0.4rem',
+                        fontSize: '0.9rem',
                         fontWeight: '900',
                         textTransform: 'uppercase'
                     }}>
-                        Sensory Impact
+                        Sensory Explosion
                     </p>
                     <h2 style={{
-                        fontSize: 'clamp(3rem, 6vw, 5rem)',
-                        marginBottom: '4rem',
+                        fontSize: 'clamp(3rem, 5vw, 4.5rem)',
+                        marginBottom: '3rem',
                         fontFamily: 'var(--font-heading)',
-                        lineHeight: 1.1,
-                        fontWeight: 800
+                        lineHeight: 1,
+                        fontWeight: 900,
+                        color: '#451A03'
                     }}>
-                        A symphony of <span style={{ color: 'var(--brand-orange)' }}>texture</span> <br />and heat.
+                        A symphony of <br />
+                        <span style={{ color: '#D97706' }}>Texture</span> & <span style={{ color: '#DC2626' }}>Heat.</span>
                     </h2>
+
                     <div style={{
-                        width: '80px',
-                        height: '1px',
-                        background: 'var(--brand-orange)',
-                        marginBottom: '4rem',
-                        opacity: 0.5
+                        width: '100px',
+                        height: '4px',
+                        background: '#DC2626',
+                        marginBottom: '3rem',
+                        borderRadius: '2px'
                     }} />
+
                     <p style={{
-                        fontSize: '1.25rem',
+                        fontSize: '1.2rem',
                         lineHeight: 1.8,
-                        color: 'rgba(255,255,255,0.7)',
-                        maxWidth: '550px',
-                        fontWeight: '400'
+                        color: '#78350F', // Rich Brown
+                        marginBottom: '2rem',
+                        fontWeight: 500
                     }}>
-                        Every grain of salt is hand-harvested from ancient Mediterranean pans. Every chili is sun-dried for twelve days. We don't just flavor our chips; we curate a sensory landscape that ignites the palate and lingers in the memory.
+                        Every grain of salt is hand-harvested from ancient Mediterranean pans.
+                        Every chili is sun-dried for twelve days. We don't just flavor our chips;
+                        we curate a sensory landscape that <span style={{ fontWeight: 800, color: '#DC2626' }}>ignites the palate</span>.
                     </p>
+
+                    <button style={{
+                        background: '#DC2626',
+                        color: 'white',
+                        border: 'none',
+                        padding: '1rem 2rem',
+                        fontSize: '1rem',
+                        fontWeight: 800,
+                        borderRadius: '50px',
+                        cursor: 'pointer',
+                        boxShadow: '0 10px 20px rgba(220, 38, 38, 0.2)',
+                        transition: 'transform 0.2s',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.5rem'
+                    }}>
+                        TASTE THE HEAT 🔥
+                    </button>
                 </div>
 
+                {/* 3D Visual Panel */}
                 <div className="flavor-3d-panel" style={{
                     height: '600px',
                     width: '100%',
                     position: 'relative',
-                    cursor: 'grab'
+                    cursor: 'grab',
+                    background: 'white', // Card-like background
+                    borderRadius: '20px',
+                    boxShadow: '0 20px 50px rgba(245, 158, 11, 0.15)', // Orange Glow Shadow
+                    overflow: 'hidden'
                 }}>
-                    <Canvas>
-                        <Scene3D />
+                    <Canvas dpr={[1, 2]}> {/* Handle high-DPI screens */}
+                        <PotatoSlicerScene />
                     </Canvas>
 
-                    {/* Vignette for the 3D scene */}
+                    {/* "Interactive" hints */}
                     <div style={{
-                        position: 'absolute',
-                        inset: 0,
-                        background: 'radial-gradient(circle, transparent 30%, rgba(0,0,0,0.8) 100%)',
-                        pointerEvents: 'none',
-                        zIndex: 1
-                    }} />
+                        position: 'absolute', bottom: '20px', right: '30px',
+                        fontWeight: 800, color: '#DC2626', fontSize: '0.8rem',
+                        letterSpacing: '0.1rem', pointerEvents: 'none'
+                    }}>
+                        FRESHLY SLICED
+                    </div>
                 </div>
             </div>
         </section>

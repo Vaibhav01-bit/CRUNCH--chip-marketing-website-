@@ -1,273 +1,218 @@
-import React, { useRef, useMemo, useEffect, Suspense } from 'react';
+import React, { useRef, useMemo, Suspense } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, PerspectiveCamera, Float, Html } from '@react-three/drei';
+import { OrbitControls, Html, Float } from '@react-three/drei';
 import * as THREE from 'three';
 
-const Globe = () => {
+const RetailerGlobe = () => {
     const globeRef = useRef();
 
-    // Key distribution points (lat, lon to cartesian)
+    // Key "Crunch Locations"
     const points = useMemo(() => [
-        { name: "London", pos: new THREE.Vector3(2, 1.5, 0.5) },
-        { name: "New York", pos: new THREE.Vector3(-2, 1.2, 0.8) },
-        { name: "Tokyo", pos: new THREE.Vector3(1.8, -0.5, 1.8) },
-        { name: "Paris", pos: new THREE.Vector3(2.2, 1.4, -0.2) },
-        { name: "Los Angeles", pos: new THREE.Vector3(-2.4, 0.8, -1.2) }
+        { position: [1.2, 0.8, 1], label: "NY" },
+        { position: [-1.5, 0.5, 1.2], label: "LA" },
+        { position: [0.5, 1.5, -0.5], label: "LDN" },
+        { position: [1.2, 0.2, 1.2], label: "MUMBAI" }, // Added India
+        { position: [2, 0, 0], label: "TKYO" },
     ], []);
 
     useFrame((state) => {
         if (globeRef.current) {
-            globeRef.current.rotation.y += 0.005;
+            globeRef.current.rotation.y += 0.002;
         }
     });
 
     return (
         <group ref={globeRef}>
-            {/* The Globe Shell */}
+            {/* Core Globe - Light Orange Tint */}
             <mesh>
-                <sphereGeometry args={[2.5, 32, 32]} />
+                <sphereGeometry args={[2, 32, 32]} />
                 <meshStandardMaterial
-                    color="#f18701"
-                    wireframe
+                    color="#FFDEAD" // NavajoWhite
+                    metalness={0.1}
+                    roughness={0.5}
+                    wireframe={false}
                     transparent
                     opacity={0.1}
                 />
             </mesh>
 
-            {/* The Nodes */}
-            {points.map((pt, i) => (
-                <group key={i} position={pt.pos}>
-                    <mesh>
-                        <sphereGeometry args={[0.08, 16, 16]} />
-                        <meshStandardMaterial
-                            color="#f35b04"
-                            emissive="#f35b04"
-                            emissiveIntensity={2}
-                        />
-                    </mesh>
-                    <pointLight color="#f35b04" intensity={0.5} distance={1} />
-
-                    {/* Subtle point name (using Html) */}
-                    <Html distanceFactor={10}>
-                        <div style={{
-                            color: 'white',
-                            fontSize: '0.6rem',
-                            fontWeight: 'bold',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.1rem',
-                            pointerEvents: 'none',
-                            whiteSpace: 'nowrap',
-                            opacity: 0.8
-                        }}>
-                            {pt.name}
-                        </div>
-                    </Html>
-                </group>
-            ))}
-
-            {/* Inner Core Glow */}
-            <mesh>
-                <sphereGeometry args={[2.3, 32, 32]} />
+            {/* Wireframe Overlay - Bold Orange */}
+            <mesh scale={[1.001, 1.001, 1.001]}>
+                <sphereGeometry args={[2, 32, 32]} />
                 <meshStandardMaterial
-                    color="#f18701"
+                    color="#DC2626"
+                    wireframe
                     transparent
-                    opacity={0.02}
+                    opacity={0.3}
                 />
             </mesh>
+
+            {/* Glowing Hotspots */}
+            {points.map((pt, i) => (
+                <Float key={i} speed={2} rotationIntensity={0} floatIntensity={0.5}>
+                    <group position={pt.position} rotation={[0, 0, 0]}>
+                        <mesh>
+                            <sphereGeometry args={[0.12, 16, 16]} />
+                            <meshStandardMaterial
+                                color="#DC2626"
+                                emissive="#B91C1C"
+                                emissiveIntensity={2}
+                            />
+                        </mesh>
+                        <Html distanceFactor={10}>
+                            <div style={{
+                                color: '#78350F',
+                                fontWeight: 900,
+                                fontSize: '0.6rem',
+                                background: 'rgba(255,255,255,0.9)',
+                                padding: '3px 8px',
+                                borderRadius: '4px',
+                                boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
+                                pointerEvents: 'none',
+                                whiteSpace: 'nowrap'
+                            }}>
+                                {pt.label}
+                            </div>
+                        </Html>
+                    </group>
+                </Float>
+            ))}
         </group>
     );
 };
 
 const Retailers = () => {
-    const partners = [
-        "Whole Foods Market", "Erewhon", "Selfridges", "Harrods", "Dean & DeLuca", "Zabar's"
+    const stores = [
+        "Whole Foods", "Blinkit", "7-Eleven",
+        "Zepto", "Target", "Swiggy Instamart"
     ];
 
-    const revealRefs = useRef([]);
-
-    useEffect(() => {
-        const observer = new IntersectionObserver(
-            (entries) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('active');
-                    }
-                });
-            },
-            { threshold: 0.1 }
-        );
-
-        revealRefs.current.forEach((ref) => {
-            if (ref) observer.observe(ref);
-        });
-
-        return () => observer.disconnect();
-    }, []);
-
     return (
-        <section id="store" className="retailers" style={{
-            background: '#0a0a0a',
-            color: 'white',
-            padding: '180px 0',
+        <section id="store" style={{
+            background: 'linear-gradient(180deg, #FFFBEB 0%, #FEF3C7 100%)', // Cream to Light Yellow
+            color: '#451A03',
             position: 'relative',
             overflow: 'hidden'
         }}>
-            <div className="container" style={{ position: 'relative', zIndex: 2 }}>
-                <div style={{ textAlign: 'center', marginBottom: '100px' }}
-                    className="reveal-on-scroll"
-                    ref={el => revealRefs.current[0] = el}
-                >
-                    <p style={{
-                        color: 'var(--brand-orange)',
-                        marginBottom: '2rem',
-                        letterSpacing: '0.5rem',
-                        fontSize: '0.8rem',
-                        fontWeight: '900',
-                        textTransform: 'uppercase'
-                    }}>
-                        Global Distribution
+            <div style={{
+                maxWidth: '1400px',
+                margin: '0 auto',
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                minHeight: '80vh',
+                alignItems: 'center'
+            }}>
+
+                {/* LEFT: UI CONTENT */}
+                <div style={{ padding: '4rem', paddingRight: '2rem', zIndex: 10 }}>
+                    <p style={{ color: '#DC2626', fontWeight: 900, letterSpacing: '0.2rem', marginBottom: '1rem' }}>
+                        GLOBAL DISTRIBUTION
                     </p>
                     <h2 style={{
-                        fontSize: 'clamp(3rem, 6vw, 5rem)',
-                        marginBottom: '4rem',
                         fontFamily: 'var(--font-heading)',
-                        lineHeight: 1.1,
-                        fontWeight: 800
+                        fontSize: 'clamp(3rem, 5vw, 4.5rem)',
+                        lineHeight: 0.9,
+                        marginBottom: '3rem',
+                        color: 'var(--primary-dark)'
                     }}>
-                        Exclusively at <span style={{ color: 'var(--brand-orange)' }}>fine</span> retailers.
+                        WORLDWIDE<br />
+                        <span style={{ color: '#F59E0B' }}>CRUNCH.</span>
                     </h2>
-                    <div style={{ width: '80px', height: '1px', background: 'white', margin: '0 auto', opacity: 0.2 }} />
-                </div>
 
-                <div
-                    style={{
+                    {/* Stores Grid */}
+                    <div style={{
                         display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
-                        gap: '6rem',
-                        alignItems: 'center'
-                    }}
-                >
-                    {/* Left: Partner Grid */}
-                    <div className="reveal-on-scroll"
-                        ref={el => revealRefs.current[1] = el}
-                        style={{ transitionDelay: '0.2s' }}
-                    >
-                        <div style={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(2, 1fr)',
-                            gap: '3rem',
-                            textAlign: 'left'
-                        }}>
-                            {partners.map((partner, i) => (
-                                <div key={i} style={{
-                                    padding: '2rem',
-                                    border: '1px solid rgba(255,255,255,0.05)',
-                                    background: 'rgba(255,255,255,0.02)',
-                                    backdropFilter: 'blur(10px)',
-                                    fontSize: '1.1rem',
-                                    fontWeight: '900',
-                                    letterSpacing: '0.1rem',
-                                    fontFamily: 'var(--font-heading)',
-                                    color: 'rgba(255,255,255,0.6)',
-                                    transition: 'all 0.4s ease',
-                                    cursor: 'default'
-                                }}
-                                    onMouseEnter={(e) => {
-                                        e.currentTarget.style.color = 'var(--brand-orange)';
-                                        e.currentTarget.style.borderColor = 'rgba(241, 135, 1, 0.3)';
-                                        e.currentTarget.style.transform = 'translateY(-5px)';
-                                    }}
-                                    onMouseLeave={(e) => {
-                                        e.currentTarget.style.color = 'rgba(255,255,255,0.6)';
-                                        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.05)';
-                                        e.currentTarget.style.transform = 'translateY(0)';
-                                    }}
-                                >
-                                    {partner.toUpperCase()}
+                        gridTemplateColumns: 'repeat(2, 1fr)',
+                        gap: '1.5rem',
+                        marginBottom: '4rem'
+                    }}>
+                        {stores.map((store, i) => (
+                            <div key={i} className="store-card" style={{
+                                padding: '1.5rem',
+                                border: '2px solid rgba(245, 158, 11, 0.2)',
+                                borderRadius: '12px',
+                                background: 'rgba(255,255,255,0.6)',
+                                backdropFilter: 'blur(5px)',
+                                position: 'relative',
+                                transition: 'all 0.3s ease',
+                                cursor: 'default'
+                            }}>
+                                <div style={{ fontWeight: 800, fontSize: '1.1rem', color: '#78350F' }}>
+                                    {store}
                                 </div>
-                            ))}
-                        </div>
+                            </div>
+                        ))}
                     </div>
 
-                    {/* Right: 3D Visualization */}
-                    <div className="reveal-on-scroll"
-                        ref={el => revealRefs.current[2] = el}
-                        style={{
-                            height: '600px',
-                            position: 'relative',
-                            transitionDelay: '0.4s'
-                        }}
-                    >
-                        <Canvas>
-                            <PerspectiveCamera makeDefault position={[0, 0, 8]} />
-                            <ambientLight intensity={0.5} />
-                            <pointLight position={[10, 10, 10]} intensity={1} />
-                            <Suspense fallback={null}>
-                                <Globe />
-                            </Suspense>
-                            <OrbitControls enableZoom={false} enablePan={false} autoRotate autoRotateSpeed={0.5} />
-                        </Canvas>
-
-                        {/* Soft Glow Background */}
-                        <div style={{
-                            position: 'absolute',
-                            top: '50%',
-                            left: '50%',
-                            transform: 'translate(-50%, -50%)',
-                            width: '400px',
-                            height: '400px',
-                            background: 'radial-gradient(circle, rgba(241, 135, 1, 0.1) 0%, transparent 70%)',
-                            borderRadius: '50%',
-                            zIndex: -1,
-                            pointerEvents: 'none'
-                        }} />
+                    {/* CTAs */}
+                    <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
+                        <button style={{
+                            background: '#DC2626',
+                            color: 'white',
+                            border: 'none',
+                            padding: '1.2rem 2.5rem',
+                            fontSize: '1rem',
+                            fontWeight: 900,
+                            borderRadius: '50px',
+                            boxShadow: '0 10px 30px rgba(220, 38, 38, 0.2)',
+                            cursor: 'pointer'
+                        }}>
+                            FIND NEAR ME 📍
+                        </button>
+                        <button style={{
+                            background: 'white',
+                            color: '#451A03',
+                            border: '3px solid #451A03',
+                            padding: '1.2rem 2.5rem',
+                            fontSize: '1rem',
+                            fontWeight: 900,
+                            borderRadius: '50px',
+                            cursor: 'pointer'
+                        }}>
+                            ORDER ONLINE
+                        </button>
                     </div>
                 </div>
 
-                <div style={{ textAlign: 'center', marginTop: '100px', transitionDelay: '0.6s' }}
-                    className="reveal-on-scroll"
-                    ref={el => revealRefs.current[3] = el}
-                >
-                    <button style={{
-                        background: 'var(--brand-red)',
-                        color: 'white',
-                        padding: '1.4rem 4rem',
-                        fontSize: '0.85rem',
-                        fontWeight: '900',
-                        letterSpacing: '0.2rem',
-                        border: 'none',
-                        cursor: 'pointer',
-                        transition: 'all 0.4s cubic-bezier(0.2, 0, 0.2, 1)',
-                        boxShadow: '0 15px 35px rgba(243, 91, 4, 0.2)',
-                        textTransform: 'uppercase'
-                    }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.transform = 'translateY(-5px)';
-                            e.currentTarget.style.background = 'var(--brand-orange)';
-                            e.currentTarget.style.boxShadow = '0 20px 45px rgba(241, 135, 1, 0.3)';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.transform = 'translateY(0)';
-                            e.currentTarget.style.background = 'var(--brand-red)';
-                            e.currentTarget.style.boxShadow = '0 15px 35px rgba(243, 91, 4, 0.2)';
-                        }}>
-                        Find Your Local Stockist
-                    </button>
+                {/* RIGHT: 3D GLOBE */}
+                <div style={{ height: '100%', minHeight: '600px', position: 'relative' }}>
+                    {/* Background Sun/Glow */}
+                    <div style={{
+                        position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+                        width: '500px', height: '500px',
+                        background: 'radial-gradient(circle, rgba(252, 211, 77, 0.4) 0%, transparent 70%)', // Yellow Glow
+                        borderRadius: '50%',
+                        zIndex: 0,
+                        pointerEvents: 'none'
+                    }} />
+
+                    <Canvas camera={{ position: [0, 0, 6], fov: 45 }}>
+                        <ambientLight intensity={0.8} />
+                        <pointLight position={[10, 10, 10]} intensity={1} color="#FFF" />
+
+                        <Suspense fallback={null}>
+                            <RetailerGlobe />
+                            <OrbitControls enableZoom={false} enablePan={false} autoRotate autoRotateSpeed={0.5} />
+                            <Float speed={2} rotationIntensity={0.1} floatIntensity={0.2} />
+                        </Suspense>
+                    </Canvas>
                 </div>
             </div>
 
-            {/* Background Texture Overlay */}
-            <div style={{
-                position: 'absolute',
-                inset: 0,
-                backgroundImage: 'url(/assets/process-visual.png)',
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                opacity: 0.05,
-                filter: 'grayscale(1)',
-                zIndex: 0,
-                pointerEvents: 'none'
-            }} />
+            {/* CSS for Store Cards hover */}
+            <style dangerouslySetInnerHTML={{
+                __html: `
+                .store-card:hover {
+                    background: #FFF !important;
+                    border-color: #DC2626 !important;
+                    transform: translateY(-5px);
+                    box-shadow: 0 10px 25px rgba(245, 158, 11, 0.2);
+                }
+                @media (max-width: 900px) {
+                    #store > div { grid-template-columns: 1fr !important; }
+                    #store canvas { height: 400px !important; }
+                }
+            `}} />
         </section>
     );
 };

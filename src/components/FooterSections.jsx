@@ -1,46 +1,56 @@
 import React, { useRef, useMemo, useEffect, Suspense } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { Points, PointMaterial, PerspectiveCamera, Float } from '@react-three/drei';
+import { Float, PerspectiveCamera, Points, PointMaterial, useTexture } from '@react-three/drei';
 import * as THREE from 'three';
 
-const sensoryVortexPositions = (count) => {
-    const pos = new Float32Array(count * 3);
-    for (let i = 0; i < count; i++) {
-        const theta = Math.random() * Math.PI * 2;
-        const r = 2 + Math.random() * 5;
-        const z = (Math.random() - 0.5) * 10;
-        pos[i * 3] = Math.cos(theta) * r;
-        pos[i * 3 + 1] = Math.sin(theta) * r;
-        pos[i * 3 + 2] = z;
-    }
-    return pos;
-};
+const ChipRain = () => {
+    const chipTexture = useTexture('/assets/chip-single.png');
+    const count = 30; // Number of falling chips
 
-const SensoryVortex = () => {
-    const count = 3000;
-    const pointsRef = useRef();
-    const positions = useMemo(() => sensoryVortexPositions(count), [count]);
+    const chips = useMemo(() => {
+        return Array.from({ length: count }).map((_, i) => ({
+            position: [(Math.random() - 0.5) * 15, Math.random() * 20 - 10, (Math.random() - 0.5) * 5 - 5],
+            rotation: [Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI],
+            scale: 0.5 + Math.random() * 0.5,
+            speed: 0.02 + Math.random() * 0.05
+        }));
+    }, []);
+
+    const groupRef = useRef();
 
     useFrame((state) => {
-        const time = state.clock.getElapsedTime();
-        if (pointsRef.current) {
-            pointsRef.current.rotation.z = time * 0.05;
-            pointsRef.current.rotation.x = Math.sin(time * 0.1) * 0.2;
+        // Falling logic can go here if we wanted individual Y updates, 
+        // but rotating the whole group is cheaper and looks like "drifting" in space.
+        if (groupRef.current) {
+            groupRef.current.rotation.y += 0.001;
+            groupRef.current.position.y -= 0.01;
+            if (groupRef.current.position.y < -5) groupRef.current.position.y = 5;
         }
     });
 
     return (
-        <Points ref={pointsRef} positions={positions} stride={3}>
-            <PointMaterial
-                transparent
-                color="#f18701"
-                size={0.02}
-                sizeAttenuation={true}
-                depthWrite={false}
-                opacity={0.3}
-                blending={THREE.AdditiveBlending}
-            />
-        </Points>
+        <group ref={groupRef}>
+            {chips.map((data, i) => (
+                <Float
+                    key={i}
+                    speed={data.speed * 10}
+                    rotationIntensity={2}
+                    floatIntensity={2}
+                >
+                    <mesh position={data.position} rotation={data.rotation} scale={data.scale}>
+                        <planeGeometry args={[1.5, 1.5, 4, 4]} />
+                        <meshStandardMaterial
+                            map={chipTexture}
+                            transparent
+                            side={THREE.DoubleSide}
+                            roughness={0.6}
+                            metalness={0.0}
+                            color="#eab308" // Golden
+                        />
+                    </mesh>
+                </Float>
+            ))}
+        </group>
     );
 };
 
@@ -63,9 +73,9 @@ export const Newsletter = () => {
 
     return (
         <section className="newsletter" style={{
-            background: '#0a0a0a',
+            background: '#0f0502', // Midnight Masala (Very Dark Brown)
             color: 'white',
-            padding: '200px 0',
+            padding: '180px 0',
             textAlign: 'center',
             position: 'relative',
             overflow: 'hidden'
@@ -75,15 +85,14 @@ export const Newsletter = () => {
                 position: 'absolute',
                 inset: 0,
                 zIndex: 0,
-                opacity: 0.6
+                opacity: 0.4
             }}>
                 <Canvas>
-                    <PerspectiveCamera makeDefault position={[0, 0, 8]} />
+                    <PerspectiveCamera makeDefault position={[0, 0, 10]} />
+                    <ambientLight intensity={0.5} />
+                    <directionalLight position={[5, 10, 5]} intensity={1} color="#FFF" />
                     <Suspense fallback={null}>
-                        <SensoryVortex />
-                        <Float speed={2} rotationIntensity={0.5} floatIntensity={1}>
-                            {/* Optional: Add a subtle floating 'element' if needed, but keeping it clean for now */}
-                        </Float>
+                        <ChipRain />
                     </Suspense>
                 </Canvas>
             </div>
@@ -91,33 +100,34 @@ export const Newsletter = () => {
             <div className="container" style={{ position: 'relative', zIndex: 2, maxWidth: '800px' }}>
                 <div className="reveal-on-scroll" ref={revealRef}>
                     <p style={{
-                        color: 'var(--brand-orange)',
-                        letterSpacing: '0.6rem',
-                        fontSize: '0.8rem',
+                        color: 'var(--brand-yellow)',
+                        letterSpacing: '0.4rem',
+                        fontSize: '0.9rem',
                         fontWeight: '900',
                         marginBottom: '2rem',
                         textTransform: 'uppercase'
                     }}>
-                        Exclusive Access
+                        Priority Access
                     </p>
                     <h2 style={{
                         fontSize: 'clamp(3rem, 6vw, 5rem)',
                         marginBottom: '2.5rem',
                         fontFamily: 'var(--font-heading)',
-                        fontWeight: 800,
-                        lineHeight: 1.1
+                        fontWeight: 900,
+                        lineHeight: 1
                     }}>
-                        Join the <span style={{ color: 'var(--brand-orange)' }}>Inner Circle</span>.
+                        Join the <span style={{ color: 'var(--brand-red)' }}>Crunch Club.</span>
                     </h2>
                     <p style={{
                         marginBottom: '4.5rem',
-                        opacity: 0.7,
+                        opacity: 0.8,
                         fontSize: '1.2rem',
                         lineHeight: 1.8,
                         maxWidth: '600px',
-                        margin: '0 auto 4.5rem'
+                        margin: '0 auto 4.5rem',
+                        color: '#d6d3d1'
                     }}>
-                        Exclusive priority access to limited-run seasonal harvests, artisan flavor collaborations, and behind-the-scenes craft stories.
+                        Get first dibs on limited edition masala drops, secret flavor trials, and exclusive invites to our tasting events.
                     </p>
 
                     <div style={{
@@ -130,267 +140,149 @@ export const Newsletter = () => {
                             display: 'flex',
                             width: '100%',
                             maxWidth: '600px',
-                            background: 'rgba(255, 255, 255, 0.03)',
-                            border: '1px solid rgba(255, 255, 255, 0.08)',
-                            padding: '0.6rem',
-                            borderRadius: '0px',
-                            backdropFilter: 'blur(20px)',
+                            background: 'rgba(255, 255, 255, 0.05)',
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            padding: '0.8rem',
+                            borderRadius: '50px', // Pill Shape
+                            backdropFilter: 'blur(10px)',
                             transition: 'all 0.4s ease'
-                        }}
-                            onMouseEnter={(e) => {
-                                e.currentTarget.style.borderColor = 'rgba(241, 135, 1, 0.3)';
-                                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                            }}
-                            onMouseLeave={(e) => {
-                                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
-                                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
-                            }}
-                        >
+                        }}>
                             <input
                                 type="email"
-                                placeholder="ENTER YOUR EMAIL"
+                                placeholder="ENTER YOUR EMAIL ID"
                                 style={{
                                     flex: 1,
-                                    padding: '1.4rem 2rem',
+                                    padding: '0 2rem',
                                     background: 'transparent',
                                     border: 'none',
                                     color: 'white',
-                                    letterSpacing: '0.2rem',
-                                    fontSize: '0.85rem',
+                                    fontSize: '1rem',
                                     outline: 'none',
-                                    fontWeight: '900'
+                                    fontWeight: '600'
                                 }}
                             />
                             <button style={{
                                 background: 'var(--brand-red)',
                                 color: 'white',
-                                padding: '1rem 3.5rem',
+                                padding: '1rem 3rem',
                                 fontWeight: '900',
                                 border: 'none',
-                                fontSize: '0.8rem',
-                                letterSpacing: '0.2rem',
+                                borderRadius: '50px',
+                                fontSize: '0.9rem',
+                                letterSpacing: '0.1rem',
                                 cursor: 'pointer',
-                                transition: 'all 0.4s cubic-bezier(0.2, 0, 0.2, 1)',
-                                boxShadow: '0 10px 30px rgba(243, 91, 4, 0.2)'
+                                transition: 'all 0.4s ease',
+                                whiteSpace: 'nowrap'
                             }}
                                 onMouseEnter={(e) => {
-                                    e.currentTarget.style.background = 'var(--brand-orange)';
-                                    e.currentTarget.style.transform = 'scale(1.02)';
+                                    e.currentTarget.style.background = 'var(--brand-yellow)';
+                                    e.currentTarget.style.color = 'black';
                                 }}
                                 onMouseLeave={(e) => {
                                     e.currentTarget.style.background = 'var(--brand-red)';
-                                    e.currentTarget.style.transform = 'scale(1)';
+                                    e.currentTarget.style.color = 'white';
                                 }}
                             >
-                                START JOURNEY
+                                SIGN UP 🌶️
                             </button>
                         </div>
-                        <p style={{ fontSize: '0.7rem', opacity: 0.4, letterSpacing: '0.1rem' }}>
-                            UNSUBSCRIBE AT ANY TIME. PRIVACY MATTERS.
-                        </p>
                     </div>
                 </div>
             </div>
 
-            {/* Subtle Gradient Overlays */}
+            {/* Fade to Black at bottom to merge with footer */}
             <div style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100%',
-                height: '150px',
-                background: 'linear-gradient(to bottom, #0a0a0a, transparent)',
-                zIndex: 1
+                position: 'absolute', bottom: 0, left: 0, width: '100%', height: '100px',
+                background: 'linear-gradient(to bottom, transparent, #000)'
             }} />
         </section>
     );
 };
 
 export const Footer = () => {
-    const revealRefs = useRef([]);
-
-    useEffect(() => {
-        const observer = new IntersectionObserver(
-            (entries) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('active');
-                    }
-                });
-            },
-            { threshold: 0.1 }
-        );
-
-        revealRefs.current.forEach((ref) => {
-            if (ref) observer.observe(ref);
-        });
-
-        return () => observer.disconnect();
-    }, []);
-
     return (
         <footer style={{
             background: '#000',
             color: 'white',
-            padding: '120px 0 60px',
+            padding: '80px 0 40px',
             position: 'relative',
-            overflow: 'hidden'
+            borderTop: '1px solid rgba(255,255,255,0.1)'
         }}>
-            <div className="container" style={{ position: 'relative', zIndex: 2 }}>
+            <div className="container">
                 <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    justifyContent: 'space-between',
+                    alignItems: 'flex-start',
                     gap: '4rem',
-                    marginBottom: '120px'
+                    marginBottom: '80px'
                 }}>
-                    <div className="reveal-on-scroll" ref={el => revealRefs.current[0] = el}>
+                    {/* Brand Column */}
+                    <div style={{ maxWidth: '300px' }}>
                         <h3 style={{
-                            fontSize: '1.8rem',
-                            marginBottom: '2.5rem',
+                            fontSize: '2rem',
+                            marginBottom: '1rem',
                             fontFamily: 'var(--font-heading)',
-                            color: 'var(--brand-orange)',
-                            fontWeight: 900,
-                            letterSpacing: '0.1rem'
+                            color: 'white',
+                            fontWeight: 900
                         }}>
-                            CRUNCH.
+                            CRUNCH<span style={{ color: 'var(--brand-red)' }}>.</span>
                         </h3>
-                        <p style={{
-                            opacity: 0.5,
-                            lineHeight: 1.8,
-                            fontSize: '0.95rem',
-                            maxWidth: '300px'
-                        }}>
-                            Architecting the ultimate sensory experience since 1984. Hand-harvested, kettle-cooked, and defined by the crunch.
+                        <p style={{ opacity: 0.5, lineHeight: 1.6 }}>
+                            Made with ❤️ and Masala in India.
+                            Delivering the ultimate crunch to the world since 1984.
                         </p>
                     </div>
 
-                    <div className="reveal-on-scroll" ref={el => revealRefs.current[1] = el} style={{ transitionDelay: '0.1s' }}>
-                        <h4 style={{
-                            marginBottom: '2rem',
-                            fontSize: '0.7rem',
-                            letterSpacing: '0.3rem',
-                            opacity: 0.9,
-                            color: 'var(--brand-amber)',
-                            fontWeight: 900,
-                            textTransform: 'uppercase'
-                        }}>
-                            Shop
-                        </h4>
-                        <div style={{
-                            opacity: 0.6,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: '1.2rem',
-                            fontSize: '0.9rem',
-                            fontWeight: 500
-                        }}>
-                            {['Collections', 'Limited Editions', 'Retail Partners'].map((link) => (
-                                <a key={link} href="#" style={{ transition: 'all 0.3s ease' }}
-                                    onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--brand-orange)'; e.currentTarget.style.transform = 'translateX(5px)'; }}
-                                    onMouseLeave={(e) => { e.currentTarget.style.color = 'inherit'; e.currentTarget.style.transform = 'translateX(0)'; }}
-                                >
-                                    {link}
-                                </a>
-                            ))}
+                    {/* Links */}
+                    <div style={{ display: 'flex', gap: '4rem', flexWrap: 'wrap' }}>
+                        <div>
+                            <h4 style={{ color: 'var(--brand-yellow)', marginBottom: '1.5rem', fontSize: '0.9rem', letterSpacing: '0.1rem' }}>SHOP</h4>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', opacity: 0.7 }}>
+                                <a href="#">Best Sellers</a>
+                                <a href="#">Variety Packs</a>
+                                <a href="#">Merch</a>
+                            </div>
                         </div>
-                    </div>
-
-                    <div className="reveal-on-scroll" ref={el => revealRefs.current[2] = el} style={{ transitionDelay: '0.2s' }}>
-                        <h4 style={{
-                            marginBottom: '2rem',
-                            fontSize: '0.7rem',
-                            letterSpacing: '0.3rem',
-                            opacity: 0.9,
-                            color: 'var(--brand-amber)',
-                            fontWeight: 900,
-                            textTransform: 'uppercase'
-                        }}>
-                            Discover
-                        </h4>
-                        <div style={{
-                            opacity: 0.6,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: '1.2rem',
-                            fontSize: '0.9rem',
-                            fontWeight: 500
-                        }}>
-                            {['Our Story', 'Sourcing', 'Contact'].map((link) => (
-                                <a key={link} href="#" style={{ transition: 'all 0.3s ease' }}
-                                    onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--brand-orange)'; e.currentTarget.style.transform = 'translateX(5px)'; }}
-                                    onMouseLeave={(e) => { e.currentTarget.style.color = 'inherit'; e.currentTarget.style.transform = 'translateX(0)'; }}
-                                >
-                                    {link}
-                                </a>
-                            ))}
+                        <div>
+                            <h4 style={{ color: 'var(--brand-yellow)', marginBottom: '1.5rem', fontSize: '0.9rem', letterSpacing: '0.1rem' }}>COMPANY</h4>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', opacity: 0.7 }}>
+                                <a href="#">Our Story</a>
+                                <a href="#">Careers</a>
+                                <a href="#">Wholesale</a>
+                            </div>
                         </div>
-                    </div>
-
-                    <div className="reveal-on-scroll" ref={el => revealRefs.current[3] = el} style={{ transitionDelay: '0.3s' }}>
-                        <h4 style={{
-                            marginBottom: '2rem',
-                            fontSize: '0.7rem',
-                            letterSpacing: '0.3rem',
-                            opacity: 0.9,
-                            color: 'var(--brand-amber)',
-                            fontWeight: 900,
-                            textTransform: 'uppercase'
-                        }}>
-                            Follow
-                        </h4>
-                        <div style={{
-                            opacity: 0.6,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: '1.2rem',
-                            fontSize: '0.9rem',
-                            fontWeight: 500
-                        }}>
-                            {['Instagram', 'Twitter', 'Vimeo'].map((link) => (
-                                <a key={link} href="#" style={{ transition: 'all 0.3s ease' }}
-                                    onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--brand-orange)'; e.currentTarget.style.transform = 'translateX(5px)'; }}
-                                    onMouseLeave={(e) => { e.currentTarget.style.color = 'inherit'; e.currentTarget.style.transform = 'translateX(0)'; }}
-                                >
-                                    {link}
-                                </a>
-                            ))}
+                        <div>
+                            <h4 style={{ color: 'var(--brand-yellow)', marginBottom: '1.5rem', fontSize: '0.9rem', letterSpacing: '0.1rem' }}>SOCIAL</h4>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', opacity: 0.7 }}>
+                                <a href="#">Instagram</a>
+                                <a href="#">Twitter/X</a>
+                                <a href="#">LinkedIn</a>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div className="reveal-on-scroll" ref={el => revealRefs.current[4] = el}
-                    style={{
-                        borderTop: '1px solid rgba(255,255,255,0.08)',
-                        paddingTop: '60px',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        opacity: 0.4,
-                        fontSize: '0.75rem',
-                        letterSpacing: '0.15rem',
-                        fontWeight: 600
-                    }}
-                >
-                    <p>© 2026 VAIBHAV INGLE. ALL RIGHTS RESERVED.</p>
-                    <div style={{ display: 'flex', gap: '3rem' }}>
-                        <a href="#" style={{ transition: 'color 0.3s ease' }} onMouseEnter={(e) => e.currentTarget.style.color = 'white'} onMouseLeave={(e) => e.currentTarget.style.color = 'inherit'}>PRIVACY POLICY</a>
-                        <a href="#" style={{ transition: 'color 0.3s ease' }} onMouseEnter={(e) => e.currentTarget.style.color = 'white'} onMouseLeave={(e) => e.currentTarget.style.color = 'inherit'}>TERMS OF SERVICE</a>
+                {/* Bottom Bar */}
+                <div style={{
+                    borderTop: '1px solid rgba(255,255,255,0.1)',
+                    paddingTop: '30px',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    flexWrap: 'wrap',
+                    gap: '1rem',
+                    opacity: 0.4,
+                    fontSize: '0.8rem'
+                }}>
+                    <p>© 2026 CRUNCH FOODS INDIA. ALL RIGHTS RESERVED.</p>
+                    <div style={{ display: 'flex', gap: '2rem' }}>
+                        <a href="#">Privacy</a>
+                        <a href="#">Terms</a>
+                        <a href="#">Sitemap</a>
                     </div>
                 </div>
             </div>
-
-            {/* Background Texture Overlay */}
-            <div style={{
-                position: 'absolute',
-                inset: 0,
-                backgroundImage: 'url(/assets/process-visual.png)',
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                opacity: 0.03,
-                filter: 'grayscale(1)',
-                zIndex: 0,
-                pointerEvents: 'none'
-            }} />
         </footer>
     );
 };

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import CircularGallery from './CircularGallery';
+import WavyDivider from './WavyDivider';
 
 const products = [
     {
@@ -54,12 +55,15 @@ const ProductShowcase = () => {
         text: p.name.toUpperCase()
     }));
 
+
     return (
         <section id="flavors" className="products" style={{
-            background: '#fff',
+            background: 'var(--brand-yellow)',
             padding: '160px 0',
-            overflow: 'hidden'
+            overflow: 'hidden',
+            position: 'relative'
         }}>
+            <WavyDivider position="top" color="var(--brand-cream)" />
             <div className="container">
                 <div style={{ textAlign: 'center', marginBottom: '60px' }} className="reveal-on-scroll" ref={revealRef}>
                     <p style={{
