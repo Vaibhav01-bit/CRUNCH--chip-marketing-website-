@@ -1,23 +1,21 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 
 const Transition = () => {
     const sectionRef = useRef(null);
-    const [chips, setChips] = useState([]);
-    const scrollY = useRef(0);
-
-    // Initialize random chips and mangos
-    useEffect(() => {
+    const itemsRef = useRef([]);
+    const scrollYRef = useRef(0);
+    const chipsData = useMemo(() => {
         const initialChips = Array.from({ length: 6 }).map((_, i) => ({
             id: `chip-${i}`,
             type: 'chip',
             x: Math.random() * 90,
             y: Math.random() * 100,
-            size: Math.random() * 100 + 120, // Increased size: 120px to 220px
+            size: Math.random() * 100 + 120,
             rotation: Math.random() * 360,
             speed: Math.random() * 0.12 + 0.08,
             parallax: Math.random() * 0.3 + 0.2,
-            blur: Math.random() * 1.5 + 0.5, // Reduced blur for clarity
-            opacity: Math.random() * 0.1 + 0.25 // More noticeable opacity
+            blur: Math.random() * 1.5 + 0.5,
+            opacity: Math.random() * 0.1 + 0.25
         }));
 
         const initialMangos = Array.from({ length: 2 }).map((_, i) => ({
@@ -29,29 +27,47 @@ const Transition = () => {
             rotation: Math.random() * 360,
             speed: Math.random() * 0.05 + 0.02,
             parallax: Math.random() * 0.1 + 0.05,
-            blur: Math.random() * 10 + 6, // Very blurred to stay in far background
+            blur: Math.random() * 10 + 6,
             opacity: 0.06
         }));
 
-        setChips([...initialChips, ...initialMangos]);
-
-        const handleScroll = () => {
-            scrollY.current = window.scrollY;
-        };
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
+        return [...initialChips, ...initialMangos];
     }, []);
 
-    const [frame, setFrame] = useState(0);
     useEffect(() => {
         let animationId;
+        let frame = 0;
+
+        const handleScroll = () => {
+            scrollYRef.current = window.scrollY;
+        };
+
         const animate = () => {
-            setFrame(f => f + 1);
+            frame++;
+            const currentScroll = scrollYRef.current;
+
+            itemsRef.current.forEach((el, i) => {
+                if (!el) return;
+                const item = chipsData[i];
+                const driftY = (frame * item.speed) % 150;
+                const parallaxY = currentScroll * item.parallax;
+                const yPos = (item.y - driftY - (parallaxY % 1000) / 10 + 120) % 120 - 10;
+                const rot = item.rotation + frame * (item.type === 'mango' ? 0.05 : 0.1);
+
+                el.style.transform = `translate3d(0, ${yPos}vh, 0) rotate(${rot}deg)`;
+            });
+
             animationId = requestAnimationFrame(animate);
         };
+
+        window.addEventListener('scroll', handleScroll, { passive: true });
         animate();
-        return () => cancelAnimationFrame(animationId);
-    }, []);
+
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+            cancelAnimationFrame(animationId);
+        };
+    }, [chipsData]);
 
     return (
         <section ref={sectionRef} className="transition-section" style={{
@@ -71,34 +87,33 @@ const Transition = () => {
                 pointerEvents: 'none',
                 zIndex: 1
             }}>
-                {chips.map((item) => {
-                    const driftY = (frame * item.speed) % 150; // Continuous drift
-                    const parallaxY = scrollY.current * item.parallax;
-                    return (
-                        <div key={item.id} style={{
+                {chipsData.map((item, i) => (
+                    <div 
+                        key={item.id} 
+                        ref={el => itemsRef.current[i] = el}
+                        style={{
                             position: 'absolute',
                             left: `${item.x}%`,
-                            top: `${(item.y - driftY - (parallaxY % 1000) / 10 + 120) % 120 - 10}%`,
+                            top: `0`, // Managed by ref
                             width: `${item.size}px`,
                             height: `${item.size}px`,
-                            transform: `rotate(${item.rotation + frame * (item.type === 'mango' ? 0.05 : 0.1)}deg)`,
                             filter: `blur(${item.blur}px)`,
                             opacity: item.opacity,
-                            transition: 'opacity 0.8s ease',
-                        }}>
-                            <img
-                                src={item.type === 'mango' ? "/assets/mango-single.png" : "/assets/chip-single.png"}
-                                alt=""
-                                style={{
-                                    width: '100%',
-                                    height: '100%',
-                                    objectFit: 'contain',
-                                    mixBlendMode: item.type === 'mango' ? 'normal' : 'multiply'
-                                }}
-                            />
-                        </div>
-                    );
-                })}
+                            willChange: 'transform'
+                        }}
+                    >
+                        <img
+                            src={item.type === 'mango' ? "/assets/mango-single.png" : "/assets/chip-single.png"}
+                            alt=""
+                            style={{
+                                width: '100%',
+                                height: '100%',
+                                objectFit: 'contain',
+                                mixBlendMode: item.type === 'mango' ? 'normal' : 'multiply'
+                            }}
+                        />
+                    </div>
+                ))}
             </div>
 
             <div className="container" style={{ maxWidth: '850px', position: 'relative', zIndex: 10 }}>

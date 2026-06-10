@@ -201,23 +201,35 @@ const PotatoSlicerScene = () => {
 
 const FlavorExperience = () => {
     const revealRef = useRef(null);
+    const sectionRef = useRef(null);
+    const [isInView, setIsInView] = useState(false);
 
     useEffect(() => {
         const observer = new IntersectionObserver(
             ([entry]) => {
                 if (entry.isIntersecting) {
-                    entry.target.classList.add('active');
+                    if (entry.target === revealRef.current) {
+                        entry.target.classList.add('active');
+                    }
+                    if (entry.target === sectionRef.current) {
+                        setIsInView(true);
+                    }
+                } else {
+                    if (entry.target === sectionRef.current) {
+                        setIsInView(false);
+                    }
                 }
             },
             { threshold: 0.1 }
         );
 
         if (revealRef.current) observer.observe(revealRef.current);
+        if (sectionRef.current) observer.observe(sectionRef.current);
         return () => observer.disconnect();
     }, []);
 
     return (
-        <section className="flavor-experience" style={{
+        <section ref={sectionRef} className="flavor-experience" style={{
             background: 'var(--brand-cream)',
             color: '#451A03', // Deep Brown Text
             padding: '160px 0',
@@ -281,21 +293,32 @@ const FlavorExperience = () => {
                         we curate a sensory landscape that <span style={{ fontWeight: 800, color: '#DC2626' }}>ignites the palate</span>.
                     </p>
 
-                    <button style={{
-                        background: '#DC2626',
-                        color: 'white',
-                        border: 'none',
-                        padding: '1rem 2rem',
-                        fontSize: '1rem',
-                        fontWeight: 800,
-                        borderRadius: '50px',
-                        cursor: 'pointer',
-                        boxShadow: '0 10px 20px rgba(220, 38, 38, 0.2)',
-                        transition: 'transform 0.2s',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '0.5rem'
-                    }}>
+                    <button 
+                        onClick={async () => {
+                            try {
+                                const res = await fetch("/api/orders/checkout", { method: "POST" });
+                                const data = await res.json();
+                                alert(data.message);
+                            } catch (error) {
+                                alert("Backend server is offline. Try starting the FastAPI server!");
+                            }
+                        }}
+                        style={{
+                            background: '#DC2626',
+                            color: 'white',
+                            border: 'none',
+                            padding: '1rem 2rem',
+                            fontSize: '1rem',
+                            fontWeight: 800,
+                            borderRadius: '50px',
+                            cursor: 'pointer',
+                            boxShadow: '0 10px 20px rgba(220, 38, 38, 0.2)',
+                            transition: 'transform 0.2s',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.5rem'
+                        }}
+                    >
                         TASTE THE HEAT 🔥
                     </button>
                 </div>
@@ -311,7 +334,7 @@ const FlavorExperience = () => {
                     boxShadow: '0 20px 50px rgba(245, 158, 11, 0.15)', // Orange Glow Shadow
                     overflow: 'hidden'
                 }}>
-                    <Canvas dpr={[1, 2]}> {/* Handle high-DPI screens */}
+                    <Canvas dpr={[1, 1.5]} frameloop={isInView ? "always" : "never"}> {/* Optimized DPR and frameloop */}
                         <PotatoSlicerScene />
                     </Canvas>
 

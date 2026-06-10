@@ -92,7 +92,12 @@ const ProductShowcase = () => {
                     </p>
                 </div>
 
-                <div style={{ height: '700px', position: 'relative', width: '100%', cursor: 'grab' }}>
+                <div style={{ 
+                    height: 'clamp(400px, 80vh, 700px)', 
+                    position: 'relative', 
+                    width: '100%', 
+                    cursor: 'grab' 
+                }}>
                     <CircularGallery
                         items={galleryItems}
                         bend={1.5}
@@ -105,7 +110,18 @@ const ProductShowcase = () => {
                 </div>
 
                 <div style={{ textAlign: 'center', marginTop: '60px' }}>
-                    <button className="explore-all-button">
+                    <button 
+                        onClick={async () => {
+                            try {
+                                const res = await fetch("/api/orders/checkout", { method: "POST" });
+                                const data = await res.json();
+                                alert(data.message);
+                            } catch (error) {
+                                alert("Backend server is offline. Try starting the FastAPI server!");
+                            }
+                        }}
+                        className="explore-all-button"
+                    >
                         Explore the full range
                     </button>
                 </div>

@@ -474,8 +474,21 @@ export default function CircularGallery({
     const containerRef = useRef(null);
     useEffect(() => {
         const app = new App(containerRef.current, { items, bend, textColor, borderRadius, font, scrollSpeed, scrollEase });
+        
+        const observer = new IntersectionObserver(([entry]) => {
+            if (entry.isIntersecting) {
+                if (!app.raf) app.update();
+            } else {
+                window.cancelAnimationFrame(app.raf);
+                app.raf = null;
+            }
+        }, { threshold: 0 });
+
+        if (containerRef.current) observer.observe(containerRef.current);
+
         return () => {
             app.destroy();
+            observer.disconnect();
         };
     }, [items, bend, textColor, borderRadius, font, scrollSpeed, scrollEase]);
     return <div className="circular-gallery" ref={containerRef} />;

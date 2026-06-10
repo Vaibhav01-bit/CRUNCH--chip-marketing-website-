@@ -50,7 +50,8 @@ const Potato = ({ texture, position, rotation, scale, speed, depthBias }) => {
 };
 
 const VolcanicDust = () => {
-    const count = 300;
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+    const count = isMobile ? 100 : 300;
     const positions = useMemo(() => {
         const pos = new Float32Array(count * 3);
         for (let i = 0; i < count; i++) {
@@ -59,7 +60,7 @@ const VolcanicDust = () => {
             pos[i * 3 + 2] = (Math.random() - 0.5) * 20;
         }
         return pos;
-    }, []);
+    }, [count]);
 
     const pointsRef = useRef();
     useFrame((state) => {
@@ -87,9 +88,11 @@ const VolcanicDust = () => {
 const PotatoField = () => {
     const tex1 = useTexture('/assets/potato-whole-1.png');
     const tex2 = useTexture('/assets/potato-whole-2.png');
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
     const potatoes = useMemo(() => {
-        return Array.from({ length: 30 }, (_, i) => ({
+        const count = isMobile ? 12 : 30;
+        return Array.from({ length: count }, (_, i) => ({
             texture: i % 2 === 0 ? tex1 : tex2,
             position: [
                 (Math.random() - 0.5) * 40,
@@ -100,7 +103,7 @@ const PotatoField = () => {
             scale: 2 + Math.random() * 3,
             speed: 0.3 + Math.random() * 1.2
         }));
-    }, [tex1, tex2]);
+    }, [tex1, tex2, isMobile]);
 
     return (
         <group>
@@ -115,7 +118,7 @@ const PotatoField = () => {
 const PotatoBackground3D = () => {
     return (
         <div style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none', background: 'var(--brand-cream)' }}>
-            <Canvas gl={{ alpha: true, antialias: true }}>
+            <Canvas dpr={[1, 1.5]} gl={{ alpha: true, antialias: true }}>
                 <PerspectiveCamera makeDefault position={[0, 0, 20]} />
 
                 {/* Bright Studio Lighting */}
@@ -243,8 +246,9 @@ const OurStory = () => {
                             height: '100%',
                             background: '#f8f8f8',
                             overflow: 'hidden',
-                            borderRadius: '12px',
-                            boxShadow: '0 30px 60px rgba(0,0,0,0.15)'
+                            borderRadius: '24px',
+                            boxShadow: '0 40px 80px rgba(0,0,0,0.2), inset 0 0 0 2px rgba(255,255,255,0.5)',
+                            border: '4px solid white'
                         }}>
                             <div style={{
                                 position: 'absolute',
@@ -290,13 +294,14 @@ const OurStory = () => {
                     style={{
                         textAlign: 'left',
                         transitionDelay: '0.2s',
-                        background: '#FFFFFF',
+                        background: 'rgba(255, 255, 255, 0.65)',
+                        backdropFilter: 'blur(25px)',
                         padding: '3.5rem',
                         borderRadius: '32px',
-                        boxShadow: '0 20px 40px rgba(69, 26, 3, 0.08)'
+                        boxShadow: '0 30px 60px rgba(0, 0, 0, 0.08), inset 0 0 0 1px rgba(255,255,255,1)'
                     }}
                 >
-                    <div style={{
+                    <div className="reveal-delay-100" style={{
                         display: 'inline-block',
                         padding: '0.6rem 1.4rem',
                         background: 'var(--brand-yellow)',
@@ -311,7 +316,7 @@ const OurStory = () => {
                         Born In Volcanic Soil
                     </div>
 
-                    <h2 style={{
+                    <h2 className="reveal-delay-200" style={{
                         fontSize: 'clamp(2.5rem, 5vw, 4rem)',
                         fontFamily: 'var(--font-heading)',
                         fontWeight: 900,
@@ -322,12 +327,17 @@ const OurStory = () => {
                     }}>
                         Crafted by <br />
                         Obsession, <br />
-                        Defined by <span style={{ color: 'var(--brand-red)' }}>crunch</span>.
+                        Defined by <span style={{ 
+                            background: 'linear-gradient(to right, var(--brand-red), var(--brand-orange))',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent',
+                            filter: 'drop-shadow(0 2px 4px rgba(220, 38, 38, 0.3))'
+                        }}>crunch</span>.
                     </h2>
 
                     <div style={{ width: '80px', height: '6px', background: 'var(--brand-yellow)', marginBottom: '2.5rem', borderRadius: '10px' }} />
 
-                    <p style={{
+                    <p className="reveal-delay-300" style={{
                         fontSize: '1.15rem',
                         lineHeight: 1.8,
                         color: 'var(--text-muted)',
@@ -338,34 +348,57 @@ const OurStory = () => {
                         Our philosophy is simple: perfection takes time. From the rich, mineral-laden soil of the valley to the precise temperature of our copper kettles, every step is a deliberate act of craft.
                     </p>
 
-                    <button style={{
-                        background: 'var(--brand-red)',
-                        color: 'white',
-                        padding: '1.2rem 3.5rem',
-                        fontSize: '0.9rem',
-                        fontWeight: '800',
-                        letterSpacing: '0.15rem',
-                        border: 'none',
-                        cursor: 'pointer',
-                        transition: 'all 0.4s cubic-bezier(0.2, 0, 0.2, 1)',
-                        boxShadow: '0 15px 35px rgba(243, 91, 4, 0.25)',
-                        textTransform: 'uppercase',
-                        borderRadius: '2px'
-                    }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.transform = 'translateY(-3px) scale(1.02)';
-                            e.currentTarget.style.background = 'var(--brand-orange)';
-                            e.currentTarget.style.boxShadow = '0 20px 45px rgba(241, 135, 1, 0.4)';
+                    <button 
+                        className="story-btn"
+                        onClick={async () => {
+                            try {
+                                const res = await fetch("/api/orders/checkout", { method: "POST" });
+                                const data = await res.json();
+                                alert(data.message);
+                            } catch (error) {
+                                alert("Backend server is offline. Try starting the FastAPI server!");
+                            }
                         }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.transform = 'translateY(0) scale(1)';
-                            e.currentTarget.style.background = 'var(--brand-red)';
-                            e.currentTarget.style.boxShadow = '0 15px 35px rgba(243, 91, 4, 0.25)';
-                        }}>
+                    >
                         Learn Our Craft
                     </button>
                 </div>
             </div>
+
+            <style dangerouslySetInnerHTML={{
+                __html: `
+                .story-btn {
+                    position: relative;
+                    background: linear-gradient(135deg, var(--brand-red) 0%, #991b1b 100%);
+                    color: white;
+                    padding: 1.2rem 3.5rem;
+                    font-size: 0.95rem;
+                    font-weight: 800;
+                    letter-spacing: 0.15rem;
+                    border: none;
+                    cursor: pointer;
+                    overflow: hidden;
+                    transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+                    box-shadow: 0 15px 35px rgba(220, 38, 38, 0.3), inset 0 2px 0 rgba(255,255,255,0.2);
+                    text-transform: uppercase;
+                    border-radius: 100px;
+                }
+                .story-btn:hover {
+                    transform: translateY(-5px) scale(1.02);
+                    box-shadow: 0 25px 45px rgba(220, 38, 38, 0.5), inset 0 2px 0 rgba(255,255,255,0.3);
+                }
+                .story-btn::after {
+                    content: '';
+                    position: absolute;
+                    top: 0; left: -100%; width: 50%; height: 100%;
+                    background: linear-gradient(to right, transparent, rgba(255,255,255,0.3), transparent);
+                    transform: skewX(-20deg);
+                    transition: all 0.6s ease;
+                }
+                .story-btn:hover::after {
+                    left: 150%;
+                }
+            `}} />
         </section>
     );
 };

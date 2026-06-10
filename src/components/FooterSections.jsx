@@ -56,6 +56,7 @@ const ChipRain = () => {
 
 export const Newsletter = () => {
     const revealRef = useRef(null);
+    const [email, setEmail] = React.useState('');
 
     useEffect(() => {
         const observer = new IntersectionObserver(
@@ -70,6 +71,22 @@ export const Newsletter = () => {
         if (revealRef.current) observer.observe(revealRef.current);
         return () => observer.disconnect();
     }, []);
+
+    const handleSubscribe = async () => {
+        if (!email) return alert("Please enter a valid email address!");
+        try {
+            const res = await fetch("/api/newsletter/subscribe", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email })
+            });
+            const data = await res.json();
+            alert(data.message);
+            setEmail('');
+        } catch (error) {
+            alert("Backend server is offline. Try starting the FastAPI server!");
+        }
+    };
 
     return (
         <section className="newsletter" style={{
@@ -87,7 +104,7 @@ export const Newsletter = () => {
                 zIndex: 0,
                 opacity: 0.4
             }}>
-                <Canvas>
+                <Canvas dpr={[1, 1.5]}>
                     <PerspectiveCamera makeDefault position={[0, 0, 10]} />
                     <ambientLight intensity={0.5} />
                     <directionalLight position={[5, 10, 5]} intensity={1} color="#FFF" />
@@ -118,7 +135,7 @@ export const Newsletter = () => {
                     }}>
                         Join the <span style={{ color: 'var(--brand-red)' }}>Crunch Club.</span>
                     </h2>
-                    <p style={{
+                    <p className="reveal-on-scroll reveal-delay-200" style={{
                         marginBottom: '4.5rem',
                         opacity: 0.8,
                         fontSize: '1.2rem',
@@ -130,7 +147,7 @@ export const Newsletter = () => {
                         Get first dibs on limited edition masala drops, secret flavor trials, and exclusive invites to our tasting events.
                     </p>
 
-                    <div style={{
+                    <div className="reveal-on-scroll reveal-delay-300" style={{
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
@@ -149,6 +166,8 @@ export const Newsletter = () => {
                         }}>
                             <input
                                 type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
                                 placeholder="ENTER YOUR EMAIL ID"
                                 style={{
                                     flex: 1,
@@ -161,20 +180,21 @@ export const Newsletter = () => {
                                     fontWeight: '600'
                                 }}
                             />
-                            <button style={{
-                                background: 'var(--brand-red)',
-                                color: 'white',
-                                padding: '1rem 3rem',
-                                fontWeight: '900',
-                                border: 'none',
-                                borderRadius: '50px',
-                                fontSize: '0.9rem',
-                                letterSpacing: '0.1rem',
-                                cursor: 'pointer',
-                                transition: 'all 0.4s ease',
-                                whiteSpace: 'nowrap'
-                            }}
-                                onMouseEnter={(e) => {
+                            <button 
+                                onClick={handleSubscribe}
+                                style={{
+                                    background: 'var(--brand-red)',
+                                    color: 'white',
+                                    padding: '1rem 3rem',
+                                    fontWeight: '900',
+                                    border: 'none',
+                                    borderRadius: '50px',
+                                    fontSize: '0.9rem',
+                                    letterSpacing: '0.1rem',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.4s ease',
+                                    whiteSpace: 'nowrap'
+                                }}                                onMouseEnter={(e) => {
                                     e.currentTarget.style.background = 'var(--brand-yellow)';
                                     e.currentTarget.style.color = 'black';
                                 }}

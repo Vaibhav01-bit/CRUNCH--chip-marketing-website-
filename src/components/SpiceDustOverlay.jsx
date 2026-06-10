@@ -19,7 +19,8 @@ const SpiceDustOverlay = () => {
         window.addEventListener('resize', resize);
         resize();
 
-        const particles = Array.from({ length: 50 }, () => ({
+        const isMobile = window.innerWidth < 768;
+        const particles = Array.from({ length: isMobile ? 10 : 20 }, () => ({
             x: Math.random() * width,
             y: Math.random() * height,
             size: Math.random() * 3 + 1,
@@ -30,7 +31,13 @@ const SpiceDustOverlay = () => {
             rotationSpeed: (Math.random() - 0.5) * 0.05
         }));
 
+        let animId;
         const animate = () => {
+            if (document.hidden) {
+                animId = requestAnimationFrame(animate);
+                return;
+            }
+
             ctx.clearRect(0, 0, width, height);
 
             particles.forEach(p => {
@@ -59,10 +66,10 @@ const SpiceDustOverlay = () => {
                 ctx.restore();
             });
 
-            requestAnimationFrame(animate);
+            animId = requestAnimationFrame(animate);
         };
 
-        const animId = requestAnimationFrame(animate);
+        animId = requestAnimationFrame(animate);
 
         return () => {
             window.removeEventListener('resize', resize);

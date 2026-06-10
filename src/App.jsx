@@ -11,26 +11,30 @@ import SpiceDustOverlay from './components/SpiceDustOverlay.jsx'
 import SocialProof from './components/SocialProof.jsx'
 import Navbar from './components/Navbar.jsx'
 
+import SmoothScroll from './components/SmoothScroll.jsx'
+
 function App() {
   return (
     <div className="app">
-      <SpiceDustOverlay />
-      <SplashCursor />
-      <Navbar />
+      <SmoothScroll>
+        <SpiceDustOverlay />
+        <SplashCursor />
+        <Navbar />
 
-      <main>
-        <HeroAnimation />
-        <Transition />
-        <ProductShowcase />
-        <SocialProof />
-        <OurStory />
-        <Craftsmanship />
-        <FlavorExperience />
-        <Retailers />
-        <Newsletter />
-      </main>
+        <main>
+          <HeroAnimation />
+          <Transition />
+          <ProductShowcase />
+          <SocialProof />
+          <OurStory />
+          <Craftsmanship />
+          <FlavorExperience />
+          <Retailers />
+          <Newsletter />
+        </main>
 
-      <Footer />
+        <Footer />
+      </SmoothScroll>
     </div>
   )
 }

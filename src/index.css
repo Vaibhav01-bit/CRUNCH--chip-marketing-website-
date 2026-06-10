@@ -43,10 +43,34 @@
 
 body {
   font-family: var(--font-body);
-  background-color: var(--bg-light);
+  background-color: var(--brand-cream);
   color: var(--text-dark);
   line-height: 1.6;
   overflow-x: hidden;
+  /* Lenis requirement */
+  width: 100%;
+  min-height: 100%;
+}
+
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis.lenis-scrolling iframe {
+  pointer-events: none;
 }
 
 h1,
@@ -176,15 +200,38 @@ section {
 }
 
 /* Animations */
+/* Animations */
 .reveal-on-scroll {
   opacity: 0;
-  transform: translateY(30px);
-  transition: all 0.8s cubic-bezier(0.2, 0, 0.2, 1);
+  transform: translateY(40px);
+  filter: blur(5px);
+  /* Add blur for premium feel */
+  transition: all 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+  /* Ultra smooth expo ease */
+  will-change: transform, opacity, filter;
 }
 
 .reveal-on-scroll.active {
   opacity: 1;
   transform: translateY(0);
+  filter: blur(0);
+}
+
+/* Stagger Utilities */
+.reveal-delay-100 {
+  transition-delay: 0.1s;
+}
+
+.reveal-delay-200 {
+  transition-delay: 0.2s;
+}
+
+.reveal-delay-300 {
+  transition-delay: 0.3s;
+}
+
+.reveal-delay-500 {
+  transition-delay: 0.5s;
 }
 
 .product-card {
